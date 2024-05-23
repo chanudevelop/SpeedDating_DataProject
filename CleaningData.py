@@ -6,7 +6,7 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore') #경고메세지 무시
 
-df = pd.read_csv('/Users/kimchanwoo/2024_1_Assignment/DataScience/TermProject/speed_data_data.csv')
+df = pd.read_csv('SpeedDating/speed_data_data.csv')
 df.head(5)
 
 # Basic Information of Dataset

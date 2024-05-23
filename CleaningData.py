@@ -103,7 +103,7 @@ print(df.isnull().sum())
 # 전처리 결과 출력
 print(df.head())
 
-# 데이터 저장
-df.to_csv('processed_speed_data.csv', index=False)
+# # 데이터 저장
+# df.to_csv('processed_speed_data.csv', index=False)
 
 

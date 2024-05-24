@@ -6,31 +6,27 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore') #경고메세지 무시
 
-df = pd.read_csv('SpeedDating/speed_data_data.csv')
+df = pd.read_csv('speed_data_data.csv')
 df.head(5)
 
 # Basic Information of Dataset
+print("\n<<Basic Information of Dataset>>")
 print(df.shape)
 print(df.index)
 print(df.columns)
 
-# Missing Values
-print('<Missing Data>')
-print(df.isnull().sum())
+###### Clean Data ######
 
-# goal의 의미를 확인할 수 없어 drop
+# Can not found goal's meaing -> drop
 df = df.drop(columns = ['goal'])
 
-# age 결측값은 평균으로 대체
-df['age'].fillna(df['age'].mean(), inplace = True)
-
 # Missing Values
-print('<Missing Data>')
+print('\n<<Missing Data>>')
 print(df.isnull().sum())
 
+# Career
 # 주요 카테고리로 그룹화하기 위한 사전 정의
 # 성능에 따라 Category를 더 추가하거나 / Other row를 drop해야할 수 있다.
-
 # 사전 정의된 카테고리 매핑
 career_mapping = {
     'Legal': ['lawyer', 'lawyer/policy work', 'law', 'corporate lawyer', 'lawyer or professional surfer', 'ip law', 'tax lawyer', 'lawyer/gov.position', 'attorney', 'corporate attorney', 'legal', 'lawyer', 'lawyer'],
@@ -55,37 +51,36 @@ career_mapping = {
 # Convert all data to lower case
 df['career'] = df['career'].str.lower()
 
-# 매핑 적용 함수
+# Mapping Function
 def map_career(career):
     for category, keywords in career_mapping.items():
         if any(keyword in career for keyword in keywords):
             return category
-    return 'Other'  # 매핑되지 않은 경우 'Other'로 지정
+    return 'Other'  # Specify as 'Other' if not mapped
 
-# 매핑 적용
+# Apply mapping
 df['career'] = df['career'].apply(lambda x: 'Unknown' if pd.isna(x) else map_career(str(x)))
 
-
-# 매핑되지 않은 나머지 'Other' 확인
-print(df[df['career'] == 'Other']['career'].unique())
 
 # Drop row Unknown value 
 df = df[df['career'] != 'Unknown']
 
-# 결과 확인
-print(df['career'].value_counts())
+# Result of cleaning career column
+print("\n<<Result of cleaning 'career' column>")
 unique_values = df['career'].unique()
 print(unique_values)
+print(df['career'].value_counts())
 
-# 그룹별 평균값으로 결측치 대체 함수 정의
+# missing value substitution function for 'income' column by group average value
 def fill_na_with_mean(df, group_col, target_col):
     df[target_col] = df.groupby(group_col)[target_col].transform(lambda x: x.fillna(x.mean()))
     return df
 
-# 결측치 대체
+# "Income" Missing value replacement
 df = fill_na_with_mean(df, 'career', 'income')
 
-# 나머지 결측값을 대체하기 위한 처리
+# Processing to replace the  missing values
+df['age'].fillna(df['age'].mean(), inplace = True)
 df['attr'].fillna(df['attr'].mean(), inplace=True)
 df['sinc'].fillna(df['sinc'].mean(), inplace=True)
 df['intel'].fillna(df['intel'].mean(), inplace=True)
@@ -94,16 +89,18 @@ df['amb'].fillna(df['amb'].mean(), inplace=True)
 df['shar'].fillna(df['shar'].mean(), inplace=True)
 df['like'].fillna(df['like'].mean(), inplace=True)
 df['prob'].fillna(df['prob'].mean(), inplace=True)
-df['met'].fillna(df['met'].mode()[0], inplace=True)
+df = df.dropna(subset=['met'])
+# Converting 'met' column values to binary variables
+# 0 converts to "meet" and other values to "never met"
+df['met'] = df['met'].apply(lambda x: 0 if x == 0 else 1)
 
-# 결과 확인
-print('<Final Missing Data>')
+# Check is there any Missing Data
+print('\n<Final Missing Data>')
 print(df.isnull().sum())
 
-# 전처리 결과 출력
+# Result of Cleaining data
+print("\n")
 print(df.head())
 
-# # 데이터 저장
-# df.to_csv('processed_speed_data.csv', index=False)
-
-
+# Saved to other file(If it needed)
+# df.to_csv('cleaned_speed_data.csv', index=False)

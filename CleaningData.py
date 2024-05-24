@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
 import warnings
 warnings.filterwarnings('ignore') #경고메세지 무시
 
@@ -101,6 +102,20 @@ print(df.isnull().sum())
 # Result of Cleaining data
 print("\n")
 print(df.head())
+
+# One-hot encoding by get_dummies function in pandas library
+df= pd.get_dummies(df, columns=['career'])
+print(df.head(20))
+
+# Split the target and features
+X = df.drop(columns=['dec'])
+y = df['dec']
+
+# Scaling with MinMaxScaler
+scaler = MinMaxScaler()
+X_scaled = scaler.fit_transform(X)
+X = pd.DataFrame(X_scaled, columns=X.columns)
+print(X.head(10))
 
 # Saved to other file(If it needed)
 # df.to_csv('cleaned_speed_data.csv', index=False)

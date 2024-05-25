@@ -112,11 +112,16 @@ print(df.head(20))
 def find_outlier(data, threshold=5):
     z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0))
     outliers = np.where(z_scores > threshold)
+    print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0])))
     return np.unique(outliers[0])
+    
 
+outliers = find_outlier(df, threshold=3)
+outliers = find_outlier(df, threshold=4)
 outliers = find_outlier(df, threshold=5)
+outliers = find_outlier(df, threshold=6)
+outliers = find_outlier(df, threshold=7)
 
-print("Number of ouliers: ", len(outliers))
 
 # Delete the outliers
 df = df.drop(df.index[outliers])

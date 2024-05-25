@@ -105,7 +105,28 @@ print(df.head())
 
 # One-hot encoding by get_dummies function in pandas library
 df= pd.get_dummies(df, columns=['career'])
+print('\n<Data after Encoding>')
 print(df.head(20))
+
+# Detect outliers with z-score
+def find_outlier(data, threshold=5):
+    z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0))
+    outliers = np.where(z_scores > threshold)
+    return np.unique(outliers[0])
+
+outliers = find_outlier(df, threshold=5)
+
+print("Number of ouliers: ", len(outliers))
+
+# Delete the outliers
+df = df.drop(df.index[outliers])
+
+print("Length after deleting outliers: ", len(df.index))
+
+# Show the Dataframe without oulier
+df.hist(figsize=(10, 9))
+plt.tight_layout()
+plt.show()
 
 # Split the target and features
 X = df.drop(columns=['dec'])
@@ -115,7 +136,9 @@ y = df['dec']
 scaler = MinMaxScaler()
 X_scaled = scaler.fit_transform(X)
 X = pd.DataFrame(X_scaled, columns=X.columns)
+
+print("\n<Data after Scaling>")
 print(X.head(10))
 
 # Saved to other file(If it needed)
-# df.to_csv('cleaned_speed_data.csv', index=False)
+df.to_csv('cleaned_speed_data.csv', index=False)

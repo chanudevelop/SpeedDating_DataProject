@@ -115,13 +115,10 @@ def find_outlier(data, threshold=5):
     print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0])))
     return np.unique(outliers[0])
     
+test = df[['age', 'income', 'dec', 'attr', 'sinc', 'intel', 'fun', 'amb',   
+       'shar', 'like', 'prob']]
 
-outliers = find_outlier(df, threshold=3)
-outliers = find_outlier(df, threshold=4)
-outliers = find_outlier(df, threshold=5)
-outliers = find_outlier(df, threshold=6)
-outliers = find_outlier(df, threshold=7)
-
+outliers = find_outlier(test, threshold=3)
 
 # Delete the outliers
 df = df.drop(df.index[outliers])

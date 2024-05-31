@@ -7,28 +7,23 @@ from sklearn.preprocessing import MinMaxScaler
 import warnings
 warnings.filterwarnings('ignore')
 
+# Read "Speed_date_data" file
 df = pd.read_csv('speed_data_data.csv')
-df.head(5)
-
-# Basic Information of Dataset
-print("\n<<Basic Information of Dataset>>")
-print(df.shape)
-print(df.index)
-print(df.columns)
 
 ###### Clean Data ######
 
-# Can not found goal's meaing -> drop
+# Can not found goal's meaning -> drop column
 df = df.drop(columns = ['goal'])
 
-# Missing Values
+# Check the number of Missing Values
 print('\n<<Missing Data>>')
 print(df.isnull().sum())
 
-# Career
-# 주요 카테고리로 그룹화하기 위한 사전 정의
-# 성능에 따라 Category를 더 추가하거나 / Other row를 drop해야할 수 있다.
-# 사전 정의된 카테고리 매핑
+# About "Career" column
+# The information entered in the Career column is too diverse and stored in various forms.
+# Don't proceed with encoding right away and proceed with categorization.
+
+# Predefined Category Mapping
 career_mapping = {
     'Legal': ['lawyer', 'lawyer/policy work', 'law', 'corporate lawyer', 'lawyer or professional surfer', 'ip law', 'tax lawyer', 'lawyer/gov.position', 'attorney', 'corporate attorney', 'legal', 'lawyer', 'lawyer'],
     'Finance': ['economist', 'financial services', 'investment banking', 'finance', 'asset management', 'trading', 'hedge fund', 'private equity', 'investment management', 'investment banker', 'investment', 'banker', 'capital markets', 'fixed income sales & trading', 'financial service', 'wall street economist'],
@@ -54,30 +49,34 @@ df['career'] = df['career'].str.lower()
 
 # Mapping Function
 def map_career(career):
+    # Iterate through each category and its associated keywords in the career_mapping dictionary
     for category, keywords in career_mapping.items():
+        # Check if any of the keywords are present in the given career string
         if any(keyword in career for keyword in keywords):
-            return category
+            # If a match is found, return the corresponding category
+            return category 
+    # If no matches are found, return 'Other' to specify that the career is not mapped
     return 'Other'  # Specify as 'Other' if not mapped
 
 # Apply mapping
 df['career'] = df['career'].apply(lambda x: 'Unknown' if pd.isna(x) else map_career(str(x)))
 
-
 # Drop row Unknown value 
 df = df[df['career'] != 'Unknown']
 
-# Result of cleaning career column
+# Show result of cleaning career column
 print("\n<<Result of cleaning 'career' column>")
 unique_values = df['career'].unique()
 print(unique_values)
 print(df['career'].value_counts())
 
+# For Replace "Income" column
 # missing value substitution function for 'income' column by group average value
 def fill_na_with_mean(df, group_col, target_col):
     df[target_col] = df.groupby(group_col)[target_col].transform(lambda x: x.fillna(x.mean()))
     return df
 
-# "Income" Missing value replacement
+# "Income" Missing value replacement by using "career column"
 df = fill_na_with_mean(df, 'career', 'income')
 
 # Processing to replace the  missing values
@@ -90,18 +89,14 @@ df['amb'].fillna(df['amb'].mean(), inplace=True)
 df['shar'].fillna(df['shar'].mean(), inplace=True)
 df['like'].fillna(df['like'].mean(), inplace=True)
 df['prob'].fillna(df['prob'].mean(), inplace=True)
-df = df.dropna(subset=['met'])
 # Converting 'met' column values to binary variables
 # 0 converts to "meet" and other values to "never met"
 df['met'] = df['met'].apply(lambda x: 0 if x == 0 else 1)
 
-# Check is there any Missing Data
+# Check is there any Missing Data and Show result of Cleaning Data
 print('\n<Final Missing Data>')
 print(df.isnull().sum())
 
-# Result of Cleaining data
-print("\n")
-print(df.head())
 
 # One-hot encoding by get_dummies function in pandas library
 df= pd.get_dummies(df, columns=['career'])
@@ -125,7 +120,7 @@ df = df.drop(df.index[outliers])
 
 print("Length after deleting outliers: ", len(df.index))
 
-# Show the Dataframe without oulier
+# Show the Dataframe without outlier
 df.hist(figsize=(10, 9))
 plt.tight_layout()
 plt.show()
@@ -138,5 +133,15 @@ df = pd.DataFrame(df_scaled, columns=df.columns)
 print("\n<Data after Scaling>")
 print(df.head(10))
 
+# Generate correlation matrix for numerical columns
+forHeatmapCol = ['gender', 'age', 'income', 'dec', 'attr', 'sinc', 'intel', 'fun', 'amb', 'shar', 'like', 'prob', 'met']
+corr_matrix = df[forHeatmapCol].corr()
+
+# Correlation Heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+plt.show()
+
 # Saved to other file(If it needed)
-df.to_csv('cleaned_speed_data.csv', index=False)
+# df.to_csv('cleaned_speed_data.csv', index=False)

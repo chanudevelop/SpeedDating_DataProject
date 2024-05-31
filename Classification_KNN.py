@@ -89,12 +89,13 @@ X_test_scaled = scaler.transform(X_test)
 knn_classifier = KNNClassifier()
 knn_classifier.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
 
-# 테스트 데이터셋에 대해 예측 수행
-#k = 5
-#y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), k) for i in range(X_test.shape[0])]
-
 #최적의 k 값으로 최종 모델 학습 및 평가
-y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), best_k) for i in range(X_test.shape[0])]
+#y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), best_k) for i in range(X_test.shape[0])]
+# 최적의 k값 돌린 결과 k = 5 일 때 최적
+
+# 테스트 데이터셋에 대해 예측 수행
+k = 5
+y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), k) for i in range(X_test.shape[0])]
 
 # 정확도 출력 및 분류 보고서 출력
 accuracy = accuracy_score(y_test, y_pred)
@@ -135,6 +136,10 @@ new_data_point = pd.DataFrame({
     'career_Sports': [False],
     'career_Technology': [False]
 })
+# 새로운 데이터 포인트에 대해 best k일 때 'dec' 값 예측
+#new_data_point_scaled = scaler.transform(new_data_point)
+#predicted_dec = knn_classifier.predict(pd.DataFrame(new_data_point_scaled, columns=new_data_point.columns), best_k)
+#print(f'Predicted dec for new data point: {predicted_dec}')
 
 # 새로운 데이터 포인트에 대해 k=5일 때 'dec' 값 예측
 new_data_point_scaled = scaler.transform(new_data_point)

@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import KFold
 
 class KNNClassifier:
     def __init__(self):
@@ -28,6 +29,32 @@ class KNNClassifier:
         
         # 가장 가까운 이웃 중 가장 흔한 레이블 반환
         return self.labels.loc[nearest_neighbors].mode()[0]
+    
+
+def find_best_k(X, y, k_values, n_splits=5):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    
+    avg_accuracies = []
+
+    for k in k_values:
+        accuracies = []
+        
+        for train_index, test_index in kf.split(X):
+            X_train, X_val = X_scaled[train_index], X_scaled[test_index]
+            y_train, y_val = y[train_index], y[test_index]
+            
+            knn_classifier = KNNClassifier()
+            knn_classifier.fit(pd.DataFrame(X_train, columns=X.columns), y_train)
+            y_pred = [knn_classifier.predict(pd.DataFrame([X_val[i]], columns=X.columns), k) for i in range(X_val.shape[0])]
+            accuracy = accuracy_score(y_val, y_pred)
+            accuracies.append(accuracy)
+        
+        avg_accuracies.append(np.mean(accuracies))
+    
+    best_k = k_values[np.argmax(avg_accuracies)]
+    return best_k, avg_accuracies
 
 # 데이터셋 불러오기
 data = pd.read_csv('cleaned_speed_data.csv')
@@ -40,6 +67,15 @@ for col in data.columns:
 # 특성(X)과 타겟(y) 정의
 X = data.drop('dec', axis=1)
 y = data['dec']
+
+# k 값 후보들 정의
+k_values = range(1, 10)
+
+# 최적의 k 값 찾기
+best_k, accuracies = find_best_k(X, y, k_values)
+
+print(f'Best k: {best_k}')
+print(f'Accuracies for each k: {accuracies}')
 
 # 데이터셋을 학습과 테스트로 분리 (70% 학습, 30% 테스트)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -54,8 +90,11 @@ knn_classifier = KNNClassifier()
 knn_classifier.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
 
 # 테스트 데이터셋에 대해 예측 수행
-k = 5
-y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), k) for i in range(X_test.shape[0])]
+#k = 5
+#y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), k) for i in range(X_test.shape[0])]
+
+#최적의 k 값으로 최종 모델 학습 및 평가
+y_pred = [knn_classifier.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), best_k) for i in range(X_test.shape[0])]
 
 # 정확도 출력 및 분류 보고서 출력
 accuracy = accuracy_score(y_test, y_pred)

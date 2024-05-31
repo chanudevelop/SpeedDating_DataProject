@@ -21,8 +21,8 @@ class KNNClassifier:
         return self.labels.loc[nearest_neighbors].mode()[0] #return the most common label among the nearest neighbors
 
 def load_and_prepare_data(file_path): #load dataset
-    data = pd.read_csv(file_path) #for career *, change boolean to number(0/1)
-    for col in data.columns:
+    data = pd.read_csv(file_path) 
+    for col in data.columns: #for career *, change boolean to number(0/1)
         if data[col].dtype == 'bool':
             data[col] = data[col].astype(int)
     return data

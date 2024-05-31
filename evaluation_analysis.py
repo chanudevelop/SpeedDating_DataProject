@@ -9,11 +9,13 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, roc_auc_score
+import math
 
-import classification
+import classification_KNN
 
 
 def trained_clustering_model(data, n_clusters):
+    # train data with k means and return model
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     kmeans.fit(data)
     return kmeans
@@ -150,7 +152,7 @@ def k_fold_cv_knn(X, y, n_neighbors):
         X_test_scaled = scaler.fit_transform(X_test)
 
         # train knn classifier model
-        knn = classification.KNNClassifier()
+        knn = classification_KNN.KNNClassifier()
         knn.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
         y_pred = [knn.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), n_neighbors) for i in
                   range(X_test.shape[0])]
@@ -192,6 +194,7 @@ def evaluate_analyze_knn(data, label='all'):
     X = data.drop(['dec'], axis=1)
     y = data['dec']
 
+    # optimal k from k-fold cv in previous code
     n_neighbors = 5
 
     # split data
@@ -203,7 +206,7 @@ def evaluate_analyze_knn(data, label='all'):
     X_test_scaled = scaler.fit_transform(X_test)
 
     # train and predict with knn classifier model
-    knn = classification.KNNClassifier()
+    knn = classification_KNN.KNNClassifier()
     knn.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
     y_pred = [knn.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), n_neighbors) for i in
               range(X_test.shape[0])]
@@ -227,43 +230,123 @@ def evaluate_analyze_knn(data, label='all'):
     print(f"AUC score of {label} data: {auc}")
 
 
-# load preprocessed data
-preprocessed_data = pd.read_csv('cleaned_speed_data.csv')
+def evaluate_and_analyze(data):
+    # analyze all data
+    # clustering
+    evaluate_analyze_clustering(data)
 
-for col in preprocessed_data.columns:
-    if preprocessed_data[col].dtype == 'bool':
-        preprocessed_data[col] = preprocessed_data[col].astype(int)
+    # k nearest neighbors
+    evaluate_analyze_knn(data)
 
-# analyze all data
-# clustering
-evaluate_analyze_clustering(preprocessed_data)
 
-# k nearest neighbors
-evaluate_analyze_knn(preprocessed_data)
+def compare_test_data_with_cluster_data(train_data, compare_data):
+    # compare test data with same gender, date successful data in same cluster
 
-# analyze by gender
-male_data = preprocessed_data[preprocessed_data['gender'] == 1]
-female_data = preprocessed_data[preprocessed_data['gender'] == 0]
+    # train clustering
+    model = trained_clustering_model(train_data, 13)
+    y_pred = model.predict(compare_data)[0]
 
-# clustering
-evaluate_analyze_clustering(male_data, label='male')
-evaluate_analyze_clustering(female_data, label='female')
+    clusters = pd.DataFrame()
+    clusters['data_index'] = train_data.index.values
+    clusters['cluster'] = model.labels_
 
-# k nearest neighbors
-evaluate_analyze_knn(male_data, label='male')
-evaluate_analyze_knn(female_data, label='female')
+    # get same cluster data with test data
+    pred_cluster_idx = clusters[clusters['cluster'] == y_pred]
 
-# analyze by age
-data_20_to_24 = preprocessed_data[(preprocessed_data['age'] >= 20) & (preprocessed_data['age'] < 25)]
-data_25_to_29 = preprocessed_data[(preprocessed_data['age'] >= 25) & (preprocessed_data['age'] < 30)]
-data_over_30 = preprocessed_data[preprocessed_data['age'] >= 30]
+    # get speed date successful data in same cluster data
+    pred_cluster = train_data.iloc[pred_cluster_idx['data_index']]
+    matched_pred_cluster = pred_cluster[pred_cluster['dec'] == 1]
 
-# clustering
-evaluate_analyze_clustering(data_20_to_24, label='age from 20 to 24')
-evaluate_analyze_clustering(data_25_to_29, label='age from 25 to 29')
-evaluate_analyze_clustering(data_25_to_29, label='age over 30')
+    # filter with same gender
+    same_gender_matched_pred_cluster = matched_pred_cluster.loc[
+        pred_cluster['gender'] == train_data['gender'][0]]
 
-# k nearest neighbors
-evaluate_analyze_knn(data_20_to_24, label='age from 20 to 24')
-evaluate_analyze_knn(data_25_to_29, label='age from 25 to 29')
-evaluate_analyze_knn(data_over_30, label='age over 30')
+    # get mean of data
+    matched_pred_cluster_mean = same_gender_matched_pred_cluster.mean()
+
+    # compare only with important 7 columns about attractive
+    important_columns = ["attr", "sinc", "intel", "fun", "amb", "shar", "like"]
+
+    # get difference between successful data and test data
+    difference = matched_pred_cluster_mean[important_columns] - compare_data[important_columns]
+    # Description of the top three columns or fewer where the difference fall
+    inferior_column_data = (difference[difference > 0]
+                            .sort_values(by=difference.index[0], ascending=False, axis=1)
+                            .iloc[:, 0:3]
+                            .dropna(axis=1))
+
+    superior_column_data = (difference[difference < 0]
+                            .sort_values(by=difference.index[0], ascending=False, axis=1)
+                            .iloc[:, 0:3]
+                            .dropna(axis=1))
+
+    column_full_names_dict = {"attr": "attractiveness", "sinc": "sincerity", "intel": "intelligence", "fun": "fun",
+                              "amb": "ambitiousness", "shar": "shared interests", "like": "overall rating"}
+
+    print("This is your strength")
+    for idx, column in enumerate(superior_column_data):
+        full_name = column_full_names_dict[column]
+        value = superior_column_data[column][0]
+        print(f"Your {full_name} is {compare_data[column][0]} points, which is %.2f greater than the successful data." % -value)
+        if idx == 0:
+            print(f"Your biggest strength is {full_name}")
+        elif idx == 1:
+            print(f"You have a talent for {full_name}!")
+        else:
+            print(f"You're a bit of {full_name}.")
+        print()
+
+    print("\nand this is your weakness")
+    for idx, column in enumerate(inferior_column_data):
+        full_name = column_full_names_dict[column]
+        value = inferior_column_data[column][0]
+        print(f"Your {full_name} is {compare_data[column][0]} points, which is %.2f lower than the successful data." % value)
+        if idx == 0:
+            print(f"What you lack the most is {full_name}, do your best!")
+        elif idx == 1:
+            print(f"You should try to increase your {full_name}!")
+        else:
+            print(f"It's better to pay a little attention to your {full_name}.")
+        print()
+
+
+# test data for comparing with successful data
+test_data = pd.DataFrame({
+    'gender': [0],
+    'age': [22],
+    'income': [70000],
+    'dec': [0],
+    'attr': [6],
+    'sinc': [8],
+    'intel': [7],
+    'fun': [6],
+    'amb': [5],
+    'shar': [5],
+    'like': [7],
+    'prob': [8],
+    'met': [2],
+    'career_Arts': [False],
+    'career_Business': [False],
+    'career_Consulting': [False],
+    'career_Education': [False],
+    'career_Engineering': [False],
+    'career_Entertainment': [False],
+    'career_Finance': [False],
+    'career_Government': [False],
+    'career_Healthcare': [False],
+    'career_Legal': [True],
+    'career_Other': [False],
+    'career_Real Estate': [False],
+    'career_Science': [False],
+    'career_Social Work': [False],
+    'career_Sports': [False],
+    'career_Technology': [False]
+})
+
+data = pd.read_csv('cleaned_speed_data.csv')
+
+for col in data.columns:
+    if data[col].dtype == 'bool':
+        data[col] = data[col].astype(int)
+
+compare_test_data_with_cluster_data(data, test_data)

@@ -110,22 +110,22 @@ print(df.head(20))
 
 # Detect outliers with z-score
 def find_outlier(data, threshold=3):
-    z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0))
-    outliers = np.where(z_scores > threshold)
-    print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0])))
+    z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0)) # z = (x-μ)/σ
+    outliers = np.where(z_scores > threshold) # If the z-score is over 3, set the data outlier
+    print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0]))) # Show the number of outliers
     return np.unique(outliers[0])
     
-test = df[['age', 'income', 'dec', 'attr', 'sinc', 'intel', 'fun', 'amb',   
+# Columns without binary columns
+find_outlier_col = df[['age', 'income', 'attr', 'sinc', 'intel', 'fun', 'amb',   
        'shar', 'like', 'prob']]
 
-outliers = find_outlier(test, threshold=3)
+# Find the ouliers
+outliers = find_outlier(find_outlier_col, threshold=3) 
 
 # Delete the outliers
 df = df.drop(df.index[outliers])
 
-print("Length after deleting outliers: ", len(df.index))
-
-# Show the Dataframe without oulier
+# Show the Dataframe without outlier
 df.hist(figsize=(10, 9))
 plt.tight_layout()
 plt.show()
@@ -133,7 +133,7 @@ plt.show()
 # Scaling with MinMaxScaler
 scaler = MinMaxScaler()
 df_scaled = scaler.fit_transform(df)
-df = pd.DataFrame(df_scaled, columns=df.columns)
+df = pd.DataFrame(df_scaled, columns=df.columns) # Convert ndarray to dataframe
 
 print("\n<Data after Scaling>")
 print(df.head(10))

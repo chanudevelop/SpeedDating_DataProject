@@ -342,11 +342,3 @@ test_data = pd.DataFrame({
     'career_Sports': [False],
     'career_Technology': [False]
 })
-
-data = pd.read_csv('cleaned_speed_data.csv')
-
-for col in data.columns:
-    if data[col].dtype == 'bool':
-        data[col] = data[col].astype(int)
-
-compare_test_data_with_cluster_data(data, test_data)

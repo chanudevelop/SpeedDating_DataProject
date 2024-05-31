@@ -276,7 +276,7 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
                             .dropna(axis=1))
 
     superior_column_data = (difference[difference < 0]
-                            .sort_values(by=difference.index[0], ascending=False, axis=1)
+                            .sort_values(by=difference.index[0], ascending=True, axis=1)
                             .iloc[:, 0:3]
                             .dropna(axis=1))
 
@@ -289,7 +289,7 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
         value = superior_column_data[column][0]
         print(f"Your {full_name} is {compare_data[column][0]} points, which is %.2f greater than the successful data." % -value)
         if idx == 0:
-            print(f"Your biggest strength is {full_name}")
+            print(f"Your biggest strength is {full_name}.")
         elif idx == 1:
             print(f"You have a talent for {full_name}!")
         else:

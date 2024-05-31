@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import warnings
-warnings.filterwarnings('ignore') #경고메세지 무시
+warnings.filterwarnings('ignore')
 
 df = pd.read_csv('speed_data_data.csv')
 df.head(5)

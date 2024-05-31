@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 # Read "Speed_date_data" file
 df = pd.read_csv('speed_data_data.csv')
 
-def preprocessData(df):
+def PreprocessData(df):
     ###### Clean Data ######
     # Can not found goal's meaning -> drop column
     df = df.drop(columns = ['goal'])

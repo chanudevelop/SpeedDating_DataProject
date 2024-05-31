@@ -109,7 +109,7 @@ print('\n<Data after Encoding>')
 print(df.head(20))
 
 # Detect outliers with z-score
-def find_outlier(data, threshold=5):
+def find_outlier(data, threshold=3):
     z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0))
     outliers = np.where(z_scores > threshold)
     print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0])))
@@ -130,17 +130,13 @@ df.hist(figsize=(10, 9))
 plt.tight_layout()
 plt.show()
 
-# Split the target and features
-X = df.drop(columns=['dec'])
-y = df['dec']
-
 # Scaling with MinMaxScaler
 scaler = MinMaxScaler()
-X_scaled = scaler.fit_transform(X)
-X = pd.DataFrame(X_scaled, columns=X.columns)
+df_scaled = scaler.fit_transform(df)
+df = pd.DataFrame(df_scaled, columns=df.columns)
 
 print("\n<Data after Scaling>")
-print(X.head(10))
+print(df.head(10))
 
 # Saved to other file(If it needed)
 df.to_csv('cleaned_speed_data.csv', index=False)

@@ -254,7 +254,8 @@ def compare_test_data_with_cluster_data(train_data, test_data, compare_data):
             compare_data[col] = compare_data[col].astype(int)
 
     # train clustering
-    model = trained_clustering_model(train_data, 13)
+    # n_clusters value 15 is optimal k getting from previous code
+    model = trained_clustering_model(train_data, 15)
     y_pred = model.predict(test_data)[0]
 
     clusters = pd.DataFrame()

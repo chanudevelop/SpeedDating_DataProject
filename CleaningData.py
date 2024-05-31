@@ -7,9 +7,6 @@ from sklearn.preprocessing import MinMaxScaler
 import warnings
 warnings.filterwarnings('ignore')
 
-# Read "Speed_date_data" file
-df = pd.read_csv('speed_data_data.csv')
-
 def PreprocessData(df):
     ###### Clean Data ######
     # Can not found goal's meaning -> drop column
@@ -125,6 +122,9 @@ def PreprocessData(df):
     plt.tight_layout()
     plt.show()
 
+    # copy not scaled data
+    not_scaled_data = df.copy()
+
     # Scaling with MinMaxScaler
     scaler = MinMaxScaler()
     df_scaled = scaler.fit_transform(df)
@@ -143,4 +143,4 @@ def PreprocessData(df):
     plt.title('Correlation Heatmap')
     plt.show()
 
-    return df
+    return not_scaled_data, df

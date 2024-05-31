@@ -23,18 +23,18 @@ def fullClustering(data) :
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(data)
 
-    def kmeans_clustering(n_clusters): # kmeans function
+    def kmeans_clustering(n_clusters): 
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         kmeans.fit(X_scaled)
         
-        data['cluster'] = kmeans.labels_
+        # data['cluster'] = kmeans.labels_
 
         # Two-dimensional conversion and visualization with principal component analysis (PCA)
         pca = PCA(n_components=2)
         X_pca = pca.fit_transform(X_scaled)
         
         pca_df = pd.DataFrame(data=X_pca, columns=['PC1', 'PC2'])
-        pca_df['cluster'] = data['cluster']
+        pca_df['cluster'] = kmeans.labels_
         
         return pca_df
 
@@ -54,10 +54,3 @@ def fullClustering(data) :
 
     plt.tight_layout()
     plt.show()
-
-
-
-
-data = pd.read_csv('cleaned_speed_data.csv') # load dataset 
-fullClustering(data) # function call
-

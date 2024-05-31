@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, roc_auc_score
-import math
 
-import classification_KNN
+import Classification_KNN
 
 
 def trained_clustering_model(data, n_clusters):
@@ -152,7 +151,7 @@ def k_fold_cv_knn(X, y, n_neighbors):
         X_test_scaled = scaler.fit_transform(X_test)
 
         # train knn classifier model
-        knn = classification_KNN.KNNClassifier()
+        knn = Classification_KNN.KNNClassifier()
         knn.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
         y_pred = [knn.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), n_neighbors) for i in
                   range(X_test.shape[0])]
@@ -206,7 +205,7 @@ def evaluate_analyze_knn(data, label='all'):
     X_test_scaled = scaler.fit_transform(X_test)
 
     # train and predict with knn classifier model
-    knn = classification_KNN.KNNClassifier()
+    knn = Classification_KNN.KNNClassifier()
     knn.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
     y_pred = [knn.predict(pd.DataFrame([X_test_scaled[i]], columns=X_test.columns), n_neighbors) for i in
               range(X_test.shape[0])]
@@ -231,6 +230,10 @@ def evaluate_analyze_knn(data, label='all'):
 
 
 def evaluate_and_analyze(data):
+    for col in data.columns:
+        if data[col].dtype == 'bool':
+            data[col] = data[col].astype(int)
+
     # analyze all data
     # clustering
     evaluate_analyze_clustering(data)
@@ -239,12 +242,20 @@ def evaluate_and_analyze(data):
     evaluate_analyze_knn(data)
 
 
-def compare_test_data_with_cluster_data(train_data, compare_data):
+def compare_test_data_with_cluster_data(train_data, test_data, compare_data):
     # compare test data with same gender, date successful data in same cluster
+
+    for col in train_data.columns:
+        if train_data[col].dtype == 'bool':
+            train_data[col] = train_data[col].astype(int)
+
+    for col in compare_data.columns:
+        if compare_data[col].dtype == 'bool':
+            compare_data[col] = compare_data[col].astype(int)
 
     # train clustering
     model = trained_clustering_model(train_data, 13)
-    y_pred = model.predict(compare_data)[0]
+    y_pred = model.predict(test_data)[0]
 
     clusters = pd.DataFrame()
     clusters['data_index'] = train_data.index.values
@@ -254,12 +265,14 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
     pred_cluster_idx = clusters[clusters['cluster'] == y_pred]
 
     # get speed date successful data in same cluster data
-    pred_cluster = train_data.iloc[pred_cluster_idx['data_index']]
+    pred_cluster = compare_data.iloc[pred_cluster_idx['data_index']]
     matched_pred_cluster = pred_cluster[pred_cluster['dec'] == 1]
 
     # filter with same gender
     same_gender_matched_pred_cluster = matched_pred_cluster.loc[
-        pred_cluster['gender'] == train_data['gender'][0]]
+        pred_cluster['gender'] == compare_data['gender'][0]]
+
+    print(same_gender_matched_pred_cluster)
 
     # get mean of data
     matched_pred_cluster_mean = same_gender_matched_pred_cluster.mean()
@@ -268,7 +281,7 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
     important_columns = ["attr", "sinc", "intel", "fun", "amb", "shar", "like"]
 
     # get difference between successful data and test data
-    difference = matched_pred_cluster_mean[important_columns] - compare_data[important_columns]
+    difference = matched_pred_cluster_mean[important_columns] - test_data[important_columns]
     # Description of the top three columns or fewer where the difference fall
     inferior_column_data = (difference[difference > 0]
                             .sort_values(by=difference.index[0], ascending=False, axis=1)
@@ -283,11 +296,12 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
     column_full_names_dict = {"attr": "attractiveness", "sinc": "sincerity", "intel": "intelligence", "fun": "fun",
                               "amb": "ambitiousness", "shar": "shared interests", "like": "overall rating"}
 
+    # print difference as commercial statement
     print("This is your strength")
     for idx, column in enumerate(superior_column_data):
         full_name = column_full_names_dict[column]
         value = superior_column_data[column][0]
-        print(f"Your {full_name} is {compare_data[column][0]} points, which is %.2f greater than the successful data." % -value)
+        print(f"Your {full_name} is {test_data[column][0]} points, which is %.2f greater than the successful data." % -value)
         if idx == 0:
             print(f"Your biggest strength is {full_name}.")
         elif idx == 1:
@@ -300,7 +314,7 @@ def compare_test_data_with_cluster_data(train_data, compare_data):
     for idx, column in enumerate(inferior_column_data):
         full_name = column_full_names_dict[column]
         value = inferior_column_data[column][0]
-        print(f"Your {full_name} is {compare_data[column][0]} points, which is %.2f lower than the successful data." % value)
+        print(f"Your {full_name} is {test_data[column][0]} points, which is %.2f lower than the successful data." % value)
         if idx == 0:
             print(f"What you lack the most is {full_name}, do your best!")
         elif idx == 1:

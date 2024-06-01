@@ -103,14 +103,17 @@ def PreprocessData(df):
 
     # Detect outliers with z-score
     def find_outlier(data, threshold=3):
-        z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0))
-        outliers = np.where(z_scores > threshold)
+        z_scores = np.abs((data - np.mean(data, axis=0)) / np.std(data, axis=0)) # z = (x-μ)/σ
+        outliers = np.where(z_scores > threshold) # If the z-score is over 3, set the data outlier
+        # Show the number of outliers
         print("Number of ouliers when threshold = {}: ".format(threshold), len(np.unique(outliers[0])))
-        return np.unique(outliers[0])
+        return np.unique(outliers[0]) 
         
+    # Columns without binary columns    
     test = df[['age', 'income', 'dec', 'attr', 'sinc', 'intel', 'fun', 'amb',   
         'shar', 'like', 'prob']]
 
+    # Find the ouliers
     outliers = find_outlier(test, threshold=3)
 
     # Delete the outliers

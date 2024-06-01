@@ -88,6 +88,7 @@ def PreprocessData(df):
     df['prob'].fillna(df['prob'].mean(), inplace=True)
     # Converting 'met' column values to binary variables
     # 0 converts to "meet" and other values to "never met"
+    df = df.dropna(subset=['met'])
     df['met'] = df['met'].apply(lambda x: 0 if x == 0 else 1)
 
     # Check is there any Missing Data and Show result of Cleaning Data

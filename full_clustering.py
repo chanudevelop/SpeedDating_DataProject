@@ -27,7 +27,6 @@ def fullClustering(data) :
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         kmeans.fit(X_scaled)
         
-        # data['cluster'] = kmeans.labels_
 
         # Two-dimensional conversion and visualization with principal component analysis (PCA)
         pca = PCA(n_components=2)
@@ -42,9 +41,7 @@ def fullClustering(data) :
     # data visualization
     fig, axes = plt.subplots(4, 5, figsize=(18,12)) # clustering range : 1-20 
 
-
     for i, ax in enumerate(axes.flat, start=1):
-
         pca_df = kmeans_clustering(i)
         sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue='cluster', palette='viridis', s=10, alpha=0.7, ax=ax) 
         ax.set_title(f'K-Means Clustering with {i} Clusters')
